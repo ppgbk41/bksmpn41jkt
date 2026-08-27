@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="50%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#93c5fd"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Rounded Squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  
+  <!-- Outer Ring Shield Accent -->
+  <circle cx="256" cy="256" r="210" fill="none" stroke="#60a5fa" stroke-width="8" stroke-dasharray="16 8" opacity="0.4"/>
+  
+  <!-- Shield Icon -->
+  <path d="M256 96L144 144V264C144 340 192 410 256 432C320 410 368 340 368 264V144L256 96Z" fill="url(#shieldGrad)" fill-opacity="0.15" stroke="#93c5fd" stroke-width="12" stroke-linejoin="round"/>
+  
+  <!-- BK Center Monogram -->
+  <text x="256" y="270" font-family="system-ui, -apple-system, sans-serif" font-size="130" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="4">BK</text>
+  
+  <!-- 41 Ribbon Badge -->
+  <rect x="186" y="305" width="140" height="42" rx="21" fill="#ef4444"/>
+  <text x="256" y="334" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="2">SMPN 41</text>
+</svg>

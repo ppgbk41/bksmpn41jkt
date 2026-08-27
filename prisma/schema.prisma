@@ -1,0 +1,277 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String   @id @default(uuid())
+  username           String   @unique
+  email              String?  @unique
+  passwordHash       String   @db.Text
+  role               String   // ADMIN, GURU_BK, WALI_KELAS, MURID
+  name               String
+  nipNis             String?  // NIP for teachers, NIS for students
+  phone              String?
+  avatarUrl          String?  @db.Text
+  mustChangePassword Boolean  @default(false)
+  activeClassId      String?  // For Wali Kelas
+  studentId          String?  // For Murid
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model AcademicYear {
+  id         String   @id @default(uuid())
+  year       String   @unique // e.g. "2024/2025"
+  semester   String   // "Ganjil" or "Genap"
+  isCurrent  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Class {
+  id             String   @id @default(uuid())
+  name           String   @unique // e.g. "7A", "8B", "9G"
+  level          Int      // 7, 8, 9
+  section        String   // A, B, C, D, E, F, G
+  academicYear   String   @default("2025/2026")
+  teacherName    String?  // Wali Kelas Name
+  teacherNip     String?
+  createdAt      DateTime @default(now())
+
+  students       Student[]
+}
+
+model Student {
+  id              String   @id @default(uuid())
+  nis             String   @unique
+  nisn            String   @unique
+  name            String
+  gender          String   // "L" or "P"
+  birthPlace      String?
+  birthDate       String?
+  religion        String?
+  address         String?  @db.Text
+  phone           String?
+  email           String?
+  fatherName      String?
+  motherName      String?
+  guardianName    String?
+  parentPhone     String?
+  parentJob       String?
+  status          String   @default("Aktif") // "Aktif", "Lulus", "Pindah"
+  notes           String?  @db.Text
+  photoUrl        String?  @db.Text
+  currentClassId  String
+  currentClass    Class    @relation(fields: [currentClassId], references: [id])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  classHistories  StudentClassHistory[]
+  assessmentResults AssessmentResult[]
+  registrations   CounselingRegistration[]
+  sessions        CounselingSession[]
+  followUps       CounselingFollowUp[]
+  referrals       TeacherReferral[]
+  bullyingReports BullyingReport[]
+}
+
+model StudentClassHistory {
+  id           String   @id @default(uuid())
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  academicYear String   // e.g. "2024/2025"
+  className    String   // e.g. "7A"
+  status       String   // "Naik Kelas", "Tetap", "Lulus"
+  createdAt    DateTime @default(now())
+}
+
+model Assessment {
+  id             String   @id @default(uuid())
+  title          String
+  category       String   // "AKPD/Kebutuhan", "Minat & Bakat", "Gaya Belajar", "Sosio-Emosional", "Karier", "Belajar"
+  description    String?  @db.Text
+  createdAt      DateTime @default(now())
+}
+
+model AssessmentResult {
+  id              String   @id @default(uuid())
+  studentId       String
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assessmentName  String
+  date            String
+  academicYear    String   @default("2025/2026")
+  score           Float?
+  category        String   // e.g. "Tinggi", "Sedang", "Perlu Perhatian"
+  interpretation  String   @db.Text
+  attentionAreas  String?  @db.Text
+  recommendations String   @db.Text
+  bkTeacherName   String
+  attachmentUrl   String?  @db.Text
+  createdAt       DateTime @default(now())
+}
+
+model CounselingRegistration {
+  id                String   @id @default(uuid())
+  registrationNo    String   @unique
+  studentId         String
+  student           Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentName       String
+  className         String
+  phone             String?
+  bkTeacherName     String?
+  issueCategory     String   // "Pribadi", "Sosial", "Belajar", "Karier", "Keluarga", "Perundungan", "Kedisiplinan"
+  reason            String   @db.Text
+  description       String   @db.Text
+  urgencyLevel      String   // "Tidak mendesak", "Perlu dibicarakan dalam waktu dekat", "Mendesak dan membutuhkan bantuan segera"
+  preferredDate     String
+  preferredTime     String
+  mode              String   // "Tatap Muka", "Daring"
+  privacyAgreed     Boolean  @default(true)
+  status            String   @default("Baru") // "Baru", "Menunggu Konfirmasi", "Sudah Dijadwalkan", "Sedang Ditangani", "Membutuhkan Tindak Lanjut", "Selesai", "Ditolak"
+  rejectionReason   String?  @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  schedules         CounselingSchedule[]
+}
+
+model CounselingSchedule {
+  id                String   @id @default(uuid())
+  registrationId    String?
+  registration      CounselingRegistration? @relation(fields: [registrationId], references: [id], onDelete: SetNull)
+  studentId         String
+  studentName       String
+  className         String
+  bkTeacherName     String
+  date              String
+  timeSlot          String
+  mode              String   @default("Tatap Muka")
+  location          String   @default("Ruang BK")
+  status            String   @default("Terjadwal") // "Terjadwal", "Selesai", "Dibatalkan", "Rescheduled"
+  notes             String?  @db.Text
+  createdAt         DateTime @default(now())
+}
+
+model CounselingSession {
+  id                   String   @id @default(uuid())
+  sessionNo            Int      @default(1)
+  studentId            String
+  student              Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  date                 String
+  time                 String
+  location             String   @default("Ruang BK")
+  bkTeacherName        String
+  referralSource       String   // "Mandiri", "Wali Kelas", "Orang Tua", "Teman", "Guru"
+  issueCategory        String   // "Pribadi", "Sosial", "Belajar", "Karier", "Keluarga", "Perundungan", "Kedisiplinan", "Kehadiran"
+  issueDescription     String   @db.Text
+  issueIdentification  String   @db.Text
+  goals                String   @db.Text
+  techniques           String   @db.Text
+  counselingProcess    String   @db.Text
+  outcome              String   @db.Text
+  agreement            String   @db.Text
+  followUpPlan         String?  @db.Text
+  nextMeetingDate      String?
+  status               String   @default("Sedang Ditangani") // "Sedang Ditangani", "Membutuhkan Tindak Lanjut", "Selesai", "Dirujuk"
+  confidentialityLevel String   @default("CONFIDENTIAL")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  followUps            CounselingFollowUp[]
+}
+
+model CounselingFollowUp {
+  id                 String   @id @default(uuid())
+  sessionId          String?
+  session            CounselingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  studentId          String
+  student            Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type               String   // "Konseling Lanjutan", "Konsultasi Wali Kelas", "Pertemuan Orang Tua", "Konferensi Kasus", "Home Visit", "Rujukan Ahli", "Pemantauan Berkala"
+  scheduleDate       String
+  involvedParties    String
+  monitoringResult   String?  @db.Text
+  conditionChange    String?  @db.Text
+  nextRecommendations String? @db.Text
+  status             String   @default("Dalam Proses") // "Dalam Proses", "Selesai"
+  completedDate      String?
+  createdAt          DateTime @default(now())
+}
+
+model TeacherReferral {
+  id                   String   @id @default(uuid())
+  studentId            String
+  student              Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentName          String
+  className            String
+  homeroomTeacherName  String
+  date                 String
+  reason               String   @db.Text
+  observedCondition    String   @db.Text
+  actionsTaken         String   @db.Text
+  priority             String   @default("Normal") // "Normal", "Tinggi", "Mendesak"
+  attachmentUrl        String?  @db.Text
+  notes                String?  @db.Text
+  status               String   @default("Baru") // "Baru", "Diterima", "Sedang Diproses", "Selesai"
+  createdAt            DateTime @default(now())
+}
+
+model BullyingReport {
+  id               String   @id @default(uuid())
+  reportNo         String   @unique
+  reporterRole     String   // "MURID", "WALI_KELAS", "GURU_BK", "ADMIN", "ANONIM"
+  reporterName     String?
+  reporterContact  String?
+  isAnonymous      Boolean  @default(false)
+  
+  victimStudentId  String?
+  victimStudent    Student? @relation(fields: [victimStudentId], references: [id], onDelete: SetNull)
+  victimName       String
+  victimClass      String
+  
+  category         String   // "Fisik", "Verbal", "Siber / Media Sosial", "Sosial / Pengucilan", "Pemerasan", "Seksual", "Lainnya"
+  urgencyLevel     String   // "DARURAT", "TINGGI", "SEDANG"
+  incidentDate     String
+  incidentLocation String
+  chronology       String   @db.Text
+  perpetrators     String?  @db.Text
+  witnesses        String?  @db.Text
+  evidenceUrl      String?  @db.Text
+  
+  status           String   @default("BARU") // "BARU", "DIPROSES", "INVESTIGASI", "MEDIASI", "SELESAI", "DIRUJUK_TPPK"
+  handledBy        String?
+  actionPlan       String?  @db.Text
+  resolutionNotes  String?  @db.Text
+  isConfidential   Boolean  @default(true)
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String?
+  targetRole String?  // "ADMIN", "GURU_BK", "WALI_KELAS", "MURID", "ALL"
+  title      String
+  message    String   @db.Text
+  type       String   // "REGISTRATION", "SCHEDULE", "REFERRAL", "ASSESSMENT", "URGENT", "SOS_BULLYING"
+  isRead     Boolean  @default(false)
+  link       String?
+  createdAt  DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  userName  String
+  userRole  String
+  action    String   // "LOGIN", "CREATE_STUDENT", "VIEW_CONFIDENTIAL_SESSION", "UPDATE_ASSESSMENT", "DELETE_STUDENT", "SOS_BULLYING"
+  module    String   // "Autentikasi", "Peserta Didik", "Catatan Konseling", "Asesmen", "Laporan", "SOS Bullying"
+  details   String   @db.Text
+  ipAddress String?  @default("127.0.0.1")
+  createdAt DateTime @default(now())
+}
