@@ -235,7 +235,45 @@ export default function DetailSiswaPage() {
                       </span>
                     </div>
                     <p><strong className="text-slate-700 dark:text-slate-300">Interpretasi:</strong> {as.interpretation}</p>
-                    {as.attentionAreas && <p><strong className="text-amber-600">Area Perhatian:</strong> {as.attentionAreas}</p>}
+                    
+                    {/* Detail Butir Terpilih */}
+                    {as.attentionAreas && (
+                      <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2 my-2">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs">
+                          Detail Butir Terpilih oleh Siswa ({as.attentionAreas.split('\n').filter(Boolean).length} Butir):
+                        </span>
+                        <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                          {as.attentionAreas.split('\n').filter(Boolean).map((line: string, lIdx: number) => {
+                            const match = line.match(/^(?:\d+\.\s*)?(?:\[(.*?)\]\s*)?(?:\((.*?)\)\s*)?(.*)$/);
+                            const cat = match?.[1] || 'Umum';
+                            const code = match?.[2] || '';
+                            const text = match?.[3] || line;
+
+                            let catColor = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+                            if (cat.toLowerCase().includes('pribadi')) catColor = 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300';
+                            if (cat.toLowerCase().includes('sosial')) catColor = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300';
+                            if (cat.toLowerCase().includes('belajar')) catColor = 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300';
+                            if (cat.toLowerCase().includes('karier')) catColor = 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300';
+
+                            return (
+                              <div key={lIdx} className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex items-start gap-2 text-xs">
+                                <span className="font-mono text-[10px] text-slate-400 shrink-0 mt-0.5">#{lIdx + 1}</span>
+                                <div className="space-y-0.5">
+                                  <div className="flex items-center gap-1">
+                                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${catColor}`}>
+                                      {cat}
+                                    </span>
+                                    {code && <span className="text-[9px] font-mono text-slate-400">({code})</span>}
+                                  </div>
+                                  <p className="text-slate-700 dark:text-slate-300">{text}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     <p><strong className="text-emerald-600">Rekomendasi Layanan BK:</strong> {as.recommendations}</p>
                   </div>
                 ))}

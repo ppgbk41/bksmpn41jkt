@@ -193,6 +193,54 @@ export default function MuridAkpdPage() {
                 {existingResult.recommendations}
               </p>
             </div>
+
+            {/* Detail Butir yang Terpilih oleh Siswa */}
+            {existingResult.attentionAreas && (
+              <div className="p-4 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between border-b pb-2 dark:border-slate-800">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <ClipboardCheck className="w-4 h-4 text-blue-500" />
+                    <span>Detail Butir Pernyataan yang Anda Pilih ({existingResult.score || 0} Butir)</span>
+                  </h4>
+                  <span className="text-[10px] text-slate-400 font-semibold">Tersimpan di Sistem BK</span>
+                </div>
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {existingResult.attentionAreas.split('\n').filter(Boolean).map((line: string, idx: number) => {
+                    const match = line.match(/^(?:\d+\.\s*)?(?:\[(.*?)\]\s*)?(?:\((.*?)\)\s*)?(.*)$/);
+                    const cat = match?.[1] || 'Umum';
+                    const code = match?.[2] || '';
+                    const text = match?.[3] || line;
+
+                    let catColor = 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300';
+                    if (cat.toLowerCase().includes('pribadi')) catColor = 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-900';
+                    if (cat.toLowerCase().includes('sosial')) catColor = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900';
+                    if (cat.toLowerCase().includes('belajar')) catColor = 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-900';
+                    if (cat.toLowerCase().includes('karier')) catColor = 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-900';
+
+                    return (
+                      <div key={idx} className="p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-xl flex items-start gap-2.5 text-xs">
+                        <span className="font-mono font-bold text-[10px] text-slate-400 shrink-0 mt-0.5">#{idx + 1}</span>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${catColor}`}>
+                              Bidang {cat}
+                            </span>
+                            {code && (
+                              <span className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded text-[10px] font-mono">
+                                {code}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-slate-700 dark:text-slate-300 leading-normal font-medium">
+                            {text}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

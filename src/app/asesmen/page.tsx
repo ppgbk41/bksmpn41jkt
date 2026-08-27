@@ -66,6 +66,8 @@ export default function AsesmenPage() {
     }
   };
 
+  const [selectedAssessmentDetail, setSelectedAssessmentDetail] = useState<any>(null);
+
   return (
     <MainLayout user={user}>
       <div className="space-y-6">
@@ -97,16 +99,17 @@ export default function AsesmenPage() {
                   <th className="p-4">Peserta Didik</th>
                   <th className="p-4">Nama Asesmen</th>
                   <th className="p-4">Skor / Kategori</th>
-                  <th className="p-4">Interpretasi Hasil</th>
+                  <th className="p-4">Interpretasi & Detail Butir</th>
                   <th className="p-4">Rekomendasi Layanan BK</th>
                   <th className="p-4">Konselor</th>
+                  <th className="p-4 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {loading ? (
-                  <tr><td colSpan={7} className="p-8 text-center text-slate-400">Memuat data asesmen...</td></tr>
+                  <tr><td colSpan={8} className="p-8 text-center text-slate-400">Memuat data asesmen...</td></tr>
                 ) : assessments.length === 0 ? (
-                  <tr><td colSpan={7} className="p-8 text-center text-slate-400">Belum ada data asesmen.</td></tr>
+                  <tr><td colSpan={8} className="p-8 text-center text-slate-400">Belum ada data asesmen.</td></tr>
                 ) : (
                   assessments.map((a, idx) => (
                     <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
@@ -117,13 +120,33 @@ export default function AsesmenPage() {
                       </td>
                       <td className="p-4 font-semibold text-blue-600 dark:text-blue-400">{a.assessmentName}</td>
                       <td className="p-4">
-                        <span className="px-2.5 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold rounded-lg">
+                        <span className="px-2.5 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold rounded-lg inline-block">
                           {a.category} {a.score ? `(${a.score})` : ''}
                         </span>
                       </td>
-                      <td className="p-4 text-slate-700 dark:text-slate-300 max-w-xs">{a.interpretation}</td>
+                      <td className="p-4 text-slate-700 dark:text-slate-300 max-w-xs space-y-2">
+                        <p className="line-clamp-3">{a.interpretation}</p>
+                        {a.attentionAreas && (
+                          <button
+                            onClick={() => setSelectedAssessmentDetail(a)}
+                            className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-bold text-[11px] rounded-lg flex items-center gap-1 transition-colors"
+                          >
+                            <ClipboardCheck className="w-3.5 h-3.5" />
+                            <span>Lihat Detail Butir Terpilih ({a.attentionAreas.split('\n').filter(Boolean).length})</span>
+                          </button>
+                        )}
+                      </td>
                       <td className="p-4 text-emerald-600 font-medium max-w-xs">{a.recommendations}</td>
                       <td className="p-4 text-slate-500">{a.bkTeacherName}</td>
+                      <td className="p-4 text-center">
+                        <button
+                          onClick={() => setSelectedAssessmentDetail(a)}
+                          className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg text-slate-600 dark:text-slate-300"
+                          title="Lihat Detail Lengkap Asesmen"
+                        >
+                          <Search className="w-4 h-4" />
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -223,6 +246,108 @@ export default function AsesmenPage() {
                 <button type="submit" className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-semibold">Simpan Hasil</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Detail Asesmen & Butir Terpilih */}
+      {selectedAssessmentDetail && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 w-full max-w-2xl shadow-2xl space-y-4 text-xs max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b pb-3 dark:border-slate-800">
+              <div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+                  {selectedAssessmentDetail.assessmentName}
+                </span>
+                <h3 className="font-bold text-base text-slate-900 dark:text-slate-100 mt-1">
+                  Detail Asesmen: {selectedAssessmentDetail.student?.name} ({selectedAssessmentDetail.student?.currentClass?.name})
+                </h3>
+                <p className="text-[11px] text-slate-400">
+                  NISN: {selectedAssessmentDetail.student?.nisn} • Tanggal: {selectedAssessmentDetail.date} • Konselor: {selectedAssessmentDetail.bkTeacherName}
+                </p>
+              </div>
+              <button onClick={() => setSelectedAssessmentDetail(null)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-2xl space-y-1">
+                <span className="font-bold text-blue-900 dark:text-blue-300 block">Kategori & Skor:</span>
+                <p className="text-blue-800 dark:text-blue-200 font-semibold">{selectedAssessmentDetail.category} {selectedAssessmentDetail.score ? `(Skor Total: ${selectedAssessmentDetail.score})` : ''}</p>
+              </div>
+
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-1">
+                <span className="font-bold text-slate-800 dark:text-slate-200 block">Interpretasi Hasil:</span>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{selectedAssessmentDetail.interpretation}</p>
+              </div>
+
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl space-y-1">
+                <span className="font-bold text-emerald-900 dark:text-emerald-300 block">Rekomendasi Layanan BK:</span>
+                <p className="text-emerald-800 dark:text-emerald-200 leading-relaxed">{selectedAssessmentDetail.recommendations}</p>
+              </div>
+
+              {/* Rincian Butir Terpilih */}
+              {selectedAssessmentDetail.attentionAreas ? (
+                <div className="space-y-2 border-t pt-3 dark:border-slate-800">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                      <ClipboardCheck className="w-4 h-4 text-blue-600" />
+                      <span>Rincian Detail Butir yang Terpilih oleh Siswa ({selectedAssessmentDetail.attentionAreas.split('\n').filter(Boolean).length} Butir):</span>
+                    </h4>
+                  </div>
+
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {selectedAssessmentDetail.attentionAreas.split('\n').filter(Boolean).map((line: string, idx: number) => {
+                      const match = line.match(/^(?:\d+\.\s*)?(?:\[(.*?)\]\s*)?(?:\((.*?)\)\s*)?(.*)$/);
+                      const cat = match?.[1] || 'Umum';
+                      const code = match?.[2] || '';
+                      const text = match?.[3] || line;
+
+                      let catColor = 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300';
+                      if (cat.toLowerCase().includes('pribadi')) catColor = 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-900';
+                      if (cat.toLowerCase().includes('sosial')) catColor = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900';
+                      if (cat.toLowerCase().includes('belajar')) catColor = 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-900';
+                      if (cat.toLowerCase().includes('karier')) catColor = 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-900';
+
+                      return (
+                        <div key={idx} className="p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 rounded-xl flex items-start gap-2.5">
+                          <span className="font-mono font-bold text-[10px] text-slate-400 shrink-0 mt-0.5">#{idx + 1}</span>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${catColor}`}>
+                                Bidang {cat}
+                              </span>
+                              {code && (
+                                <span className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded text-[10px] font-mono">
+                                  {code}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-slate-800 dark:text-slate-200 font-medium">
+                              {text}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-slate-400 text-center">
+                  Tidak ada rincian butir terpilih spesifik untuk asesmen ini.
+                </div>
+              )}
+            </div>
+
+            <div className="pt-3 flex justify-end border-t dark:border-slate-800">
+              <button
+                onClick={() => setSelectedAssessmentDetail(null)}
+                className="px-5 py-2 bg-slate-800 text-white dark:bg-slate-700 font-bold rounded-xl text-xs"
+              >
+                Tutup
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -146,7 +146,7 @@ export async function POST(request: Request) {
 
     const interpretation = `Hasil AKPD menunjukkan peserta didik memiliki ${totalSelected} butir kebutuhan prioritas (Tingkat: ${categoryStatus}). Kebutuhan tertinggi berada pada Bidang ${dominantField.name} (${dominantField.pct}%). Rincian distribusi 4 Bidang Layanan: Belajar (${percentBelajar}%), Pribadi (${percentPribadi}%), Sosial (${percentSosial}%), dan Karier (${percentKarier}%).`;
 
-    const attentionAreasList = selectedItems.map((it, idx) => `${idx + 1}. [${it.category}] ${it.text}`).join('\n');
+    const attentionAreasList = selectedItems.map((it, idx) => `${idx + 1}. [${it.category}] (${it.id}) ${it.text}`).join('\n');
 
     let recommendations = '';
     if (dominantField.name === 'Belajar') {
