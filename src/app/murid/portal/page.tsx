@@ -17,7 +17,8 @@ import {
   X,
   RefreshCw,
   Sparkles,
-  AlertTriangle
+  AlertTriangle,
+  ClipboardCheck
 } from 'lucide-react';
 
 export default function MuridPortalPage() {
@@ -141,6 +142,37 @@ export default function MuridPortalPage() {
               <span>Daftar Konseling</span>
             </Link>
           </div>
+        </div>
+
+        {/* AKPD Assessment Action Card */}
+        <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-950 border border-purple-800/40 rounded-3xl p-5 shadow-xl text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-purple-600/30 border border-purple-500/40 text-purple-300 flex items-center justify-center font-bold shrink-0 shadow-lg">
+              <ClipboardCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-500/30 text-purple-200 border border-purple-500/40">
+                  AKPD Online Terstandar
+                </span>
+                <span className="text-xs text-purple-300">Tahun Ajaran 2025/2026</span>
+              </div>
+              <h3 className="text-sm font-bold text-white mt-0.5">
+                Asesmen Kebutuhan Peserta Didik (AKPD)
+              </h3>
+              <p className="text-[11px] text-purple-200/90 max-w-xl">
+                Isi angket kebutuhan 4 Bidang Layanan (Pribadi, Sosial, Belajar, Karier) agar Guru BK dapat memberikan bimbingan yang tepat sasaran.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/murid/asesmen/akpd"
+            className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs rounded-2xl flex items-center gap-2 shadow-lg shadow-purple-600/40 shrink-0 transition-transform hover:scale-105"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Isi Asesmen AKPD ➔</span>
+          </Link>
         </div>
 
         {/* Tab Navigation */}
