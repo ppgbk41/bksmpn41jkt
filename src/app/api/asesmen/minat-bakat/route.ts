@@ -5,7 +5,7 @@ import { DEFAULT_MINAT_BAKAT_ITEMS } from '@/lib/assessment-data';
 
 export const dynamic = 'force-dynamic';
 
-export const MINAT_BAKAT_ITEMS = DEFAULT_MINAT_BAKAT_ITEMS;
+const MINAT_BAKAT_ITEMS = DEFAULT_MINAT_BAKAT_ITEMS;
 
 // GET: Ambil daftar soal & rekap kelas
 export async function GET(request: Request) {
