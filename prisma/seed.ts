@@ -210,21 +210,43 @@ async function main() {
 
     // Create User accounts for test students (0081234567, 0079876543, 0061122334)
     if (['0081234567', '0079876543', '0061122334'].includes(s.nisn)) {
-      await prisma.user.upsert({
-        where: { username: s.nisn },
-        update: {},
-        create: {
-          username: s.nisn,
-          email: `${s.nisn}@murid.smp41jkt.sch.id`,
-          passwordHash: muridPassword,
-          role: 'MURID',
-          name: s.name,
-          nipNis: s.nisn,
-          phone: s.phone,
-          studentId: createdStudent.id,
-          mustChangePassword: false
+      const studentEmail = `${s.nisn}@murid.smp41jkt.sch.id`;
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          OR: [{ username: s.nisn }, { email: studentEmail }]
         }
       });
+
+      if (existingUser) {
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            username: s.nisn,
+            email: studentEmail,
+            passwordHash: muridPassword,
+            role: 'MURID',
+            name: s.name,
+            nipNis: s.nisn,
+            phone: s.phone,
+            studentId: createdStudent.id,
+            mustChangePassword: false
+          }
+        });
+      } else {
+        await prisma.user.create({
+          data: {
+            username: s.nisn,
+            email: studentEmail,
+            passwordHash: muridPassword,
+            role: 'MURID',
+            name: s.name,
+            nipNis: s.nisn,
+            phone: s.phone,
+            studentId: createdStudent.id,
+            mustChangePassword: false
+          }
+        });
+      }
     }
 
     // Create Student Class History
@@ -302,8 +324,10 @@ async function main() {
 
   // 6. Create Counseling Registrations
   if (studentRizky) {
-    await prisma.counselingRegistration.create({
-      data: {
+    await prisma.counselingRegistration.upsert({
+      where: { registrationNo: 'REG-2025-08-001' },
+      update: {},
+      create: {
         registrationNo: 'REG-2025-08-001',
         studentId: studentRizky.id,
         studentName: studentRizky.name,
@@ -324,8 +348,10 @@ async function main() {
   }
 
   if (studentSiti) {
-    const regUrgent = await prisma.counselingRegistration.create({
-      data: {
+    const regUrgent = await prisma.counselingRegistration.upsert({
+      where: { registrationNo: 'REG-2025-08-002' },
+      update: {},
+      create: {
         registrationNo: 'REG-2025-08-002',
         studentId: studentSiti.id,
         studentName: studentSiti.name,

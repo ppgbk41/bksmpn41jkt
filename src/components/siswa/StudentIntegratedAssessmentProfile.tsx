@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ShieldAlert, Compass, ClipboardCheck, HeartHandshake, BookOpen, Award, History, Clock, ArrowRight, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
+import RiasecRecommendationCard from '@/components/asesmen/RiasecRecommendationCard';
 
 interface IntegratedProfileProps {
   student: any;
@@ -88,6 +89,24 @@ export default function StudentIntegratedAssessmentProfile({ student, userRole }
             <p className="font-black text-sm text-purple-700 dark:text-purple-300">{latestRiasec?.dominantResult || 'Belum Mengerjakan'}</p>
             <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2">{latestRiasec?.interpretation || '-'}</p>
           </div>
+
+          {/* Full Detailed RIASEC Recommendation Engine Display */}
+          {latestRiasec && (
+            <div className="pt-4">
+              <RiasecRecommendationCard
+                scores={(() => {
+                  try {
+                    return JSON.parse(latestRiasec.summaryJson || '{}').scores;
+                  } catch (e) {
+                    return undefined;
+                  }
+                })()}
+                hollandCode={latestRiasec.dominantResult?.replace('Kode Holland: ', '')}
+                studentName={student.name}
+                showRoleBadge={true}
+              />
+            </div>
+          )}
 
           {/* Minat & Bakat Card */}
           <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 space-y-2">

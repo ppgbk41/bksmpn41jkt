@@ -5,6 +5,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import Link from 'next/link';
 import { ArrowLeft, Compass, Send, CheckCircle2, RefreshCw } from 'lucide-react';
 import { DEFAULT_RIASEC_ITEMS } from '@/lib/assessment-data';
+import RiasecRecommendationCard from '@/components/asesmen/RiasecRecommendationCard';
 
 export default function MuridRiasecPage() {
   const [user, setUser] = useState<any>(null);
@@ -94,22 +95,32 @@ export default function MuridRiasecPage() {
         </div>
 
         {existingSubmission && (
-          <div className="bg-white dark:bg-slate-900 border border-purple-500/30 rounded-3xl p-6 shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b pb-3 dark:border-slate-800">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-                  Hasil Tipologi Holland Anda: {existingSubmission.dominantResult}
-                </h3>
+                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  Asesmen RIASEC Terakhir Disimpan pada versi #{existingSubmission.version} ({existingSubmission.academicYear} - {existingSubmission.semester})
+                </span>
               </div>
-              <button onClick={() => setExistingSubmission(null)} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-xs font-bold rounded-xl flex items-center gap-1">
+              <button onClick={() => setExistingSubmission(null)} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold rounded-xl flex items-center gap-1">
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Isi Ulang</span>
+                <span>Isi Ulang Asesmen</span>
               </button>
             </div>
-            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-              {existingSubmission.interpretation}
-            </p>
+
+            <RiasecRecommendationCard
+              scores={(() => {
+                try {
+                  return JSON.parse(existingSubmission.summaryJson || '{}').scores;
+                } catch (e) {
+                  return undefined;
+                }
+              })()}
+              hollandCode={existingSubmission.dominantResult?.replace('Kode Holland: ', '')}
+              studentName={user?.name}
+              showRoleBadge={true}
+            />
           </div>
         )}
 

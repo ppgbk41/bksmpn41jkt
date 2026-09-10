@@ -8,6 +8,7 @@ import AkpdConfigModal from '@/components/asesmen/AkpdConfigModal';
 import AkpdRekapTab from '@/components/asesmen/AkpdRekapTab';
 import SociogramVisualizer from '@/components/asesmen/SociogramVisualizer';
 import RiasecChart from '@/components/asesmen/RiasecChart';
+import RiasecRecommendationCard from '@/components/asesmen/RiasecRecommendationCard';
 import LearningStyleChart from '@/components/asesmen/LearningStyleChart';
 import {
   ClipboardCheck,
@@ -312,17 +313,66 @@ export default function AsesmenPage() {
 
         {/* RIASEC Detail View */}
         {activeAssessment === 'RIASEC' && riasecData && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="font-extrabold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Compass className="w-5 h-5 text-purple-600" />
-                <span>Rekapitulasi Tipologi Holland RIASEC</span>
+                <span>Rekapitulasi Tipologi Holland RIASEC & Rekomendasi Peminatan</span>
               </h3>
               <button onClick={() => setActiveAssessment('OVERVIEW')} className="text-xs text-blue-600 font-bold hover:underline">
                 Kembali ke Overview
               </button>
             </div>
+
             <RiasecChart classDistribution={riasecData.classDistribution || {}} />
+
+            {/* List of Individual Student RIASEC Recommendations */}
+            <div className="space-y-4">
+              <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 border-b pb-2">
+                Daftar Rekomendasi Peminatan Per Peserta Didik ({riasecData.studentSubmissions?.length || 0} Siswa)
+              </h4>
+
+              {(!riasecData.studentSubmissions || riasecData.studentSubmissions.length === 0) ? (
+                <div className="p-8 text-center bg-slate-50 dark:bg-slate-800/40 rounded-2xl text-slate-400 text-xs">
+                  Belum ada siswa yang menyelesaikan Asesmen RIASEC pada scope filter ini.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {riasecData.studentSubmissions.map((sub: any) => {
+                    let scores;
+                    try {
+                      scores = JSON.parse(sub.summaryJson || '{}').scores;
+                    } catch (e) {}
+
+                    return (
+                      <div key={sub.id} className="space-y-3">
+                        <div className="p-4 bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/40 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div>
+                            <span className="font-extrabold text-sm text-purple-900 dark:text-purple-200">
+                              {sub.student?.name} (Kelas {sub.student?.currentClass?.name})
+                            </span>
+                            <p className="text-[11px] text-slate-500">
+                              NISN: {sub.student?.nisn} • Versi #{sub.version} • {sub.dominantResult}
+                            </p>
+                          </div>
+                          <span className="px-3 py-1 bg-purple-600 text-white rounded-lg text-xs font-bold shrink-0">
+                            {sub.dominantResult}
+                          </span>
+                        </div>
+
+                        <RiasecRecommendationCard
+                          scores={scores}
+                          hollandCode={sub.dominantResult?.replace('Kode Holland: ', '')}
+                          studentName={sub.student?.name}
+                          className={sub.student?.currentClass?.name}
+                          showRoleBadge={true}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
