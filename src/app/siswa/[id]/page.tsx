@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
+import StudentIntegratedAssessmentProfile from '@/components/siswa/StudentIntegratedAssessmentProfile';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -210,75 +211,7 @@ export default function DetailSiswaPage() {
         {/* TAB C: Hasil Asesmen */}
         {activeTab === 'C' && (
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4">
-            <div className="flex justify-between items-center border-b pb-2">
-              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Hasil Asesmen Kebutuhan & Psikologis</h3>
-              {['ADMIN', 'GURU_BK'].includes(user?.role) && (
-                <Link href={`/asesmen?studentId=${student.id}`} className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold flex items-center gap-1">
-                  + Input Hasil Asesmen
-                </Link>
-              )}
-            </div>
-
-            {!student.assessmentResults || student.assessmentResults.length === 0 ? (
-              <div className="p-8 text-center text-xs text-slate-400">Peserta didik belum memiliki data hasil asesmen.</div>
-            ) : (
-              <div className="space-y-4">
-                {student.assessmentResults.map((as: any, idx: number) => (
-                  <div key={idx} className="p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl space-y-2 text-xs">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-bold text-sm text-blue-600 dark:text-blue-400">{as.assessmentName}</h4>
-                        <p className="text-[10px] text-slate-400">Tanggal Pelaksanaan: {as.date} • Konselor: {as.bkTeacherName}</p>
-                      </div>
-                      <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold rounded-lg">
-                        Kategori: {as.category} {as.score ? `(${as.score})` : ''}
-                      </span>
-                    </div>
-                    <p><strong className="text-slate-700 dark:text-slate-300">Interpretasi:</strong> {as.interpretation}</p>
-                    
-                    {/* Detail Butir Terpilih */}
-                    {as.attentionAreas && (
-                      <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2 my-2">
-                        <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs">
-                          Detail Butir Terpilih oleh Siswa ({as.attentionAreas.split('\n').filter(Boolean).length} Butir):
-                        </span>
-                        <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                          {as.attentionAreas.split('\n').filter(Boolean).map((line: string, lIdx: number) => {
-                            const match = line.match(/^(?:\d+\.\s*)?(?:\[(.*?)\]\s*)?(?:\((.*?)\)\s*)?(.*)$/);
-                            const cat = match?.[1] || 'Umum';
-                            const code = match?.[2] || '';
-                            const text = match?.[3] || line;
-
-                            let catColor = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
-                            if (cat.toLowerCase().includes('pribadi')) catColor = 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300';
-                            if (cat.toLowerCase().includes('sosial')) catColor = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300';
-                            if (cat.toLowerCase().includes('belajar')) catColor = 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300';
-                            if (cat.toLowerCase().includes('karier')) catColor = 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300';
-
-                            return (
-                              <div key={lIdx} className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex items-start gap-2 text-xs">
-                                <span className="font-mono text-[10px] text-slate-400 shrink-0 mt-0.5">#{lIdx + 1}</span>
-                                <div className="space-y-0.5">
-                                  <div className="flex items-center gap-1">
-                                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${catColor}`}>
-                                      {cat}
-                                    </span>
-                                    {code && <span className="text-[9px] font-mono text-slate-400">({code})</span>}
-                                  </div>
-                                  <p className="text-slate-700 dark:text-slate-300">{text}</p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    <p><strong className="text-emerald-600">Rekomendasi Layanan BK:</strong> {as.recommendations}</p>
-                  </div>
-                ))}
-              </div>
-            )}
+            <StudentIntegratedAssessmentProfile student={student} userRole={user?.role || ''} />
           </div>
         )}
 

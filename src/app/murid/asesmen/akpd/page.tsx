@@ -22,13 +22,15 @@ import {
   ShieldCheck,
   ChevronRight
 } from 'lucide-react';
+import { DEFAULT_AKPD_ITEMS } from '@/lib/assessment-data';
 
 export default function MuridAkpdPage() {
   const [user, setUser] = useState<any>(null);
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>(DEFAULT_AKPD_ITEMS);
   const [existingResult, setExistingResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [isRefilling, setIsRefilling] = useState(false);
 
   // Selected items Set
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -51,8 +53,10 @@ export default function MuridAkpdPage() {
       const res = await fetch('/api/asesmen/akpd');
       if (res.ok) {
         const data = await res.json();
-        setItems(data.items || []);
-        setExistingResult(data.existingResult || null);
+        if (data.items && data.items.length > 0) {
+          setItems(data.items);
+        }
+        setExistingResult(data.existingSubmission || data.existingResult || null);
       }
     } catch (e) {
       console.error(e);
@@ -80,7 +84,7 @@ export default function MuridAkpdPage() {
 
   const handleSubmit = async () => {
     if (selectedIds.length === 0) {
-      const confirmEmpty = confirm('Anda belum memilih satupun butir pernyataan. Apakah Anda yakin tidak memiliki kendala atau kebutuhan pada seluruh butir angket?');
+      const confirmEmpty = confirm('Anda belum memilih satupun butir pernyataan. Apakah Anda yakin tidak memiliki kendala atau kebutuhan pada seluruh 40 butir angket?');
       if (!confirmEmpty) return;
     }
 
@@ -95,8 +99,9 @@ export default function MuridAkpdPage() {
       const data = await res.json();
       if (res.ok) {
         setSubmittedSummary(data.summary);
-        setExistingResult(data.result);
-        alert('🎉 Terima kasih! Asesmen AKPD Anda berhasil dikirim ke Guru BK.');
+        setExistingResult(data.submission || data.result);
+        setIsRefilling(false);
+        alert('🎉 Terima kasih! Jawaban AKPD Anda berhasil dikirim ke Guru BK.');
       } else {
         alert(data.error || 'Gagal mengirim asesmen');
       }
@@ -122,32 +127,30 @@ export default function MuridAkpdPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Navigation Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-slate-500">
-          <Link href="/murid/portal" className="hover:text-blue-600 flex items-center gap-1 font-semibold">
+          <Link href="/murid/asesmen" className="hover:text-blue-600 flex items-center gap-1 font-semibold">
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Kembali ke Portal Murid</span>
+            <span>Kembali ke Portal Asesmen</span>
           </Link>
           <span>/</span>
-          <span className="text-slate-700 dark:text-slate-300 font-bold">AKPD Online</span>
+          <span className="text-slate-700 dark:text-slate-300 font-bold">AKPD Online SMP</span>
         </div>
 
         {/* Hero Header */}
-        <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-950 p-6 sm:p-8 rounded-3xl border border-blue-800/40 text-white shadow-xl relative overflow-hidden">
-          <div className="relative z-10 space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Asesmen Non-Tes Terstandar ABKIN</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Angket Kebutuhan Peserta Didik (AKPD)
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              Pilihlah butir pernyataan di bawah ini yang paling menggambarkan kondisi atau kebutuhan Anda saat ini. Jawaban Anda bersifat <strong>rahasia</strong> dan akan digunakan oleh Guru BK untuk membantu pengembangan diri Anda.
-            </p>
+        <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-950 p-6 sm:p-8 rounded-3xl border border-blue-800/40 text-white shadow-xl space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Instrumen Angket Kebutuhan Peserta Didik (ABKIN SMP)</span>
           </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            Angket Kebutuhan Peserta Didik (AKPD)
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+            Pilihlah butir-butir pernyataan di bawah ini yang paling menggambarkan kondisi atau kendala yang sedang Anda hadapi. Jawaban Anda bersifat <strong>rahasia</strong> dan akan membantu Guru BK menyusun bimbingan yang tepat.
+          </p>
         </div>
 
-        {/* Jika sudah pernah mengisi dan melihat hasil */}
-        {existingResult && !submittedSummary && (
+        {/* Jika sudah pernah mengisi dan tidak sedang re-fill */}
+        {existingResult && !isRefilling && !submittedSummary && (
           <div className="bg-white dark:bg-slate-900 border border-emerald-500/30 rounded-3xl p-6 shadow-sm space-y-5">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4 dark:border-slate-800">
               <div className="flex items-center gap-3">
@@ -159,26 +162,28 @@ export default function MuridAkpdPage() {
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
                       Sudah Terisi
                     </span>
-                    <span className="text-xs text-slate-400">Tanggal: {existingResult.date}</span>
+                    <span className="text-xs text-slate-400">
+                      Tanggal: {existingResult.createdAt ? new Date(existingResult.createdAt).toLocaleDateString('id-ID') : existingResult.date}
+                    </span>
                   </div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                    Hasil Diagnostik Asesmen AKPD Anda
+                    Hasil Diagnostik AKPD Anda: {existingResult.dominantResult || existingResult.category}
                   </h3>
                 </div>
               </div>
 
               <button
-                onClick={() => setExistingResult(null)}
-                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors"
+                onClick={() => setIsRefilling(true)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors shadow-md"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Isi Ulang AKPD</span>
+                <span>Pengisian Ulang AKPD</span>
               </button>
             </div>
 
             <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/40 rounded-2xl space-y-2">
               <span className="text-xs font-bold text-blue-900 dark:text-blue-300 block">
-                Ringkasan Profil Kebutuhan ({existingResult.category}):
+                Ringkasan Profil Kebutuhan:
               </span>
               <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
                 {existingResult.interpretation}
@@ -193,59 +198,11 @@ export default function MuridAkpdPage() {
                 {existingResult.recommendations}
               </p>
             </div>
-
-            {/* Detail Butir yang Terpilih oleh Siswa */}
-            {existingResult.attentionAreas && (
-              <div className="p-4 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
-                <div className="flex items-center justify-between border-b pb-2 dark:border-slate-800">
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <ClipboardCheck className="w-4 h-4 text-blue-500" />
-                    <span>Detail Butir Pernyataan yang Anda Pilih ({existingResult.score || 0} Butir)</span>
-                  </h4>
-                  <span className="text-[10px] text-slate-400 font-semibold">Tersimpan di Sistem BK</span>
-                </div>
-                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {existingResult.attentionAreas.split('\n').filter(Boolean).map((line: string, idx: number) => {
-                    const match = line.match(/^(?:\d+\.\s*)?(?:\[(.*?)\]\s*)?(?:\((.*?)\)\s*)?(.*)$/);
-                    const cat = match?.[1] || 'Umum';
-                    const code = match?.[2] || '';
-                    const text = match?.[3] || line;
-
-                    let catColor = 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300';
-                    if (cat.toLowerCase().includes('pribadi')) catColor = 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-900';
-                    if (cat.toLowerCase().includes('sosial')) catColor = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900';
-                    if (cat.toLowerCase().includes('belajar')) catColor = 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-900';
-                    if (cat.toLowerCase().includes('karier')) catColor = 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-900';
-
-                    return (
-                      <div key={idx} className="p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-xl flex items-start gap-2.5 text-xs">
-                        <span className="font-mono font-bold text-[10px] text-slate-400 shrink-0 mt-0.5">#{idx + 1}</span>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${catColor}`}>
-                              Bidang {cat}
-                            </span>
-                            {code && (
-                              <span className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded text-[10px] font-mono">
-                                {code}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-slate-700 dark:text-slate-300 leading-normal font-medium">
-                            {text}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
-        {/* Questionnaire Interface */}
-        {(!existingResult || submittedSummary) && (
+        {/* Questionnaire Form View */}
+        {(!existingResult || isRefilling || submittedSummary) && (
           <div className="space-y-6">
             {/* Category Tabs */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -295,7 +252,7 @@ export default function MuridAkpdPage() {
                     Pernyataan {activeCategory === 'Pribadi' ? 'Bidang Pribadi' : activeCategory === 'Sosial' ? 'Bidang Sosial' : activeCategory === 'Belajar' ? 'Bidang Belajar' : 'Bidang Karier'}
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    Centang pernyataan yang saat ini Anda rasakan atau butuhkan bantuannya:
+                    Centang butir di bawah yang Anda rasakan atau butuhkan bantuannya saat ini:
                   </p>
                 </div>
 
@@ -309,7 +266,7 @@ export default function MuridAkpdPage() {
 
               {/* Items List */}
               <div className="space-y-2.5">
-                {currentCategoryItems.map((item, idx) => {
+                {currentCategoryItems.map((item) => {
                   const isChecked = selectedIds.includes(item.id);
 
                   return (
@@ -332,7 +289,7 @@ export default function MuridAkpdPage() {
 
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                          Butir {item.id}
+                          Butir [{item.id}]
                         </span>
                         <p className={`text-xs sm:text-sm leading-relaxed ${
                           isChecked

@@ -97,6 +97,7 @@ export default function Sidebar({ user: initialUser, onCloseMobile }: SidebarPro
         { label: 'Data Peserta Didik', href: '/siswa', icon: Users, roles: ['ADMIN', 'GURU_BK', 'WALI_KELAS'] },
         { label: 'Pengaturan Kelas', href: '/kelas', icon: School, roles: ['ADMIN', 'GURU_BK'] },
         { label: 'Hasil Asesmen', href: '/asesmen', icon: ClipboardCheck, roles: ['ADMIN', 'GURU_BK', 'WALI_KELAS'] },
+        { label: 'Asesmen Mandiri', href: '/murid/asesmen', icon: ClipboardCheck, roles: ['MURID'] },
       ]
     },
     {

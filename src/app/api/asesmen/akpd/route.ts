@@ -1,70 +1,52 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { DEFAULT_AKPD_ITEMS, evaluateAssessmentAlert } from '@/lib/assessment-data';
 
 export const dynamic = 'force-dynamic';
 
-export const AKPD_ITEMS = [
-  // 1. BIDANG PRIBADI (10 Butir)
-  { id: 'P01', category: 'Pribadi', text: 'Saya merasa sulit mengendalikan emosi atau rasa marah ketika tersinggung oleh orang lain.' },
-  { id: 'P02', category: 'Pribadi', text: 'Saya sering merasa kurang percaya diri, cemas, atau malu saat diminta tampil di depan umum.' },
-  { id: 'P03', category: 'Pribadi', text: 'Saya merasa belum bisa menerima keadaan fisik atau penampilan diri saya apa adanya.' },
-  { id: 'P04', category: 'Pribadi', text: 'Saya merasa kesulitan menjalankan ibadah secara teratur dan konsisten setiap hari.' },
-  { id: 'P05', category: 'Pribadi', text: 'Saya sering merasa stres, tertekan, atau overthinking terhadap masa depan saya.' },
-  { id: 'P06', category: 'Pribadi', text: 'Saya bingung bagaimana cara mengenali potensi, kelebihan, dan kelemahan dalam diri saya.' },
-  { id: 'P07', category: 'Pribadi', text: 'Saya kesulitan mengelola uang saku dan belum terbiasa hidup hemat atau menabung.' },
-  { id: 'P08', category: 'Pribadi', text: 'Saya merasa mudah putus asa atau menyerah ketika menghadapi kegagalan.' },
-  { id: 'P09', category: 'Pribadi', text: 'Saya bingung menghadapi perubahan fisik dan psikologis pada masa pubertas.' },
-  { id: 'P10', category: 'Pribadi', text: 'Saya sering merasa kesepian atau merasa tidak ada orang yang memahami perasaan saya.' },
-
-  // 2. BIDANG SOSIAL (10 Butir)
-  { id: 'S01', category: 'Sosial', text: 'Saya merasa canggung, kaku, atau sulit bergaul dan mencari teman baru di lingkungan sekolah.' },
-  { id: 'S02', category: 'Sosial', text: 'Saya pernah mengalami ejekan, hinaan, dikucilkan, atau intimidasi (bullying) dari teman.' },
-  { id: 'S03', category: 'Sosial', text: 'Saya merasa sulit menolak ajakan teman sebaya meskipun saya tahu hal itu melanggar aturan.' },
-  { id: 'S04', category: 'Sosial', text: 'Saya sering berselisih paham atau bertengkar dengan teman dekat dan bingung cara menyelesaikannya.' },
-  { id: 'S05', category: 'Sosial', text: 'Saya merasa kurang nyaman atau memiliki masalah komunikasi dengan orang tua / keluarga di rumah.' },
-  { id: 'S06', category: 'Sosial', text: 'Saya kesulitan menyampaikan pendapat atau bersikap asertif kepada orang lain.' },
-  { id: 'S07', category: 'Sosial', text: 'Saya merasa sering menjadi sasaran gosip atau komentar negatif di media sosial.' },
-  { id: 'S08', category: 'Sosial', text: 'Saya merasa sulit bekerja sama secara efektif dalam kerja kelompok.' },
-  { id: 'S09', category: 'Sosial', text: 'Saya ingin belajar cara etika bergaul dan sopan santun dengan guru dan orang yang lebih tua.' },
-  { id: 'S10', category: 'Sosial', text: 'Saya merasa mudah terpengaruh oleh tren pergaulan negatif di lingkungan sekitar.' },
-
-  // 3. BIDANG BELAJAR (10 Butir)
-  { id: 'B01', category: 'Belajar', text: 'Saya sering menunda-nunda mengerjakan tugas sekolah (prokrastinasi) hingga mendekati batas waktu.' },
-  { id: 'B02', category: 'Belajar', text: 'Saya kesulitan membagi waktu antara belajar, membantu orang tua, dan bermain game / gadget.' },
-  { id: 'B03', category: 'Belajar', text: 'Saya merasa cepat bosan, mengantuk, atau sulit berkonsentrasi saat guru menjelaskan pelajaran.' },
-  { id: 'B04', category: 'Belajar', text: 'Saya belum mengetahui gaya belajar yang paling efektif dan tepat untuk diri saya.' },
-  { id: 'B05', category: 'Belajar', text: 'Saya merasa cemas dan panik berlebihan ketika akan menghadapi ujian atau ulangan harian.' },
-  { id: 'B06', category: 'Belajar', text: 'Saya merasa kesulitan memahami mata pelajaran tertentu (seperti Matematika / IPA / Bahasa).' },
-  { id: 'B07', category: 'Belajar', text: 'Saya tidak memiliki tempat atau suasana belajar yang tenang dan nyaman di rumah.' },
-  { id: 'B08', category: 'Belajar', text: 'Saya merasa motivasi dan semangat belajar saya menurun drastis belakangan ini.' },
-  { id: 'B09', category: 'Belajar', text: 'Saya merasa malu atau takut untuk bertanya kepada guru saat belum memahami materi pelajaran.' },
-  { id: 'B10', category: 'Belajar', text: 'Saya kesulitan mengingat atau menghafal materi pelajaran dalam jangka waktu lama.' },
-
-  // 4. BIDANG KARIER (10 Butir)
-  { id: 'K01', category: 'Karier', text: 'Saya belum memiliki gambaran yang jelas mengenai cita-cita atau profesi masa depan saya.' },
-  { id: 'K02', category: 'Karier', text: 'Saya bingung memilih antara melanjutkan ke SMA, SMK, atau MA setelah lulus dari SMP.' },
-  { id: 'K03', category: 'Karier', text: 'Saya belum mengetahui bakat dan minat khusus yang saya miliki untuk dikembangkan.' },
-  { id: 'K04', category: 'Karier', text: 'Cita-cita yang saya inginkan berbeda dengan harapan atau pilihan orang tua saya.' },
-  { id: 'K05', category: 'Karier', text: 'Saya ingin mengetahui informasi tentang berbagai jenis profesi dan peluang kerja modern di masa depan.' },
-  { id: 'K06', category: 'Karier', text: 'Saya khawatir biaya pendidikan akan menghalangi saya untuk melanjutkan sekolah yang saya impikan.' },
-  { id: 'K07', category: 'Karier', text: 'Saya ingin tahu kelebihan dan kekurangan antara jurusan IPA, IPS, Bahasa, atau Kejuruan SMK.' },
-  { id: 'K08', category: 'Karier', text: 'Saya merasa hobi yang saya sukai belum bisa diarahkan menjadi karier di masa depan.' },
-  { id: 'K09', category: 'Karier', text: 'Saya ingin belajar cara merencanakan masa depan sejak dini agar tidak salah langkah.' },
-  { id: 'K10', category: 'Karier', text: 'Saya merasa belum memiliki keterampilan praktis yang bermanfaat untuk kehidupan mandiri.' }
-];
-
-// GET: Ambil daftar butir soal AKPD dan status pengisian siswa
-export async function GET() {
+// GET: Ambil butir AKPD (dengan severity dari config) & rekap data
+export async function GET(request: Request) {
   try {
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const academicYear = searchParams.get('academicYear') || '2025/2026';
+    const semester = searchParams.get('semester') || 'Ganjil';
+    const classId = searchParams.get('classId');
+
+    // Load severity configs
+    const configs = await prisma.assessmentItemConfig.findMany({
+      where: { assessmentType: 'AKPD' }
+    });
+    const severityMap: Record<string, string> = {};
+    configs.forEach(c => {
+      severityMap[c.itemCode] = c.severity;
+    });
+
+    const items = DEFAULT_AKPD_ITEMS.map((it, idx) => ({
+      ...it,
+      orderIndex: idx + 1,
+      severity: severityMap[it.id] || it.severity || 'NORMAL'
+    }));
+
     let existingResult = null;
+    let existingSubmission = null;
 
     if (session.role === 'MURID' && session.studentId) {
+      existingSubmission = await prisma.assessmentSubmission.findFirst({
+        where: {
+          studentId: session.studentId,
+          assessmentType: 'AKPD',
+          academicYear,
+          semester
+        },
+        orderBy: { version: 'desc' }
+      });
+
       existingResult = await prisma.assessmentResult.findFirst({
         where: {
           studentId: session.studentId,
@@ -74,18 +56,99 @@ export async function GET() {
       });
     }
 
+    // Rekapitulasi per butir & per siswa jika role BK / Admin
+    let itemAnalysis: Record<string, { count: number; percentage: number; studentNames: string[]; severity: string }> = {};
+    let studentSubmissions: any[] = [];
+    let fieldDistribution = { Pribadi: 0, Sosial: 0, Belajar: 0, Karier: 0 };
+    let topNeedsInClass: Array<{ code: string; text: string; category: string; count: number; pct: number }> = [];
+
+    if (['ADMIN', 'GURU_BK', 'WALI_KELAS'].includes(session.role)) {
+      let studentWhere: any = { status: 'Aktif' };
+      if (classId) studentWhere.currentClassId = classId;
+
+      const submissions = await prisma.assessmentSubmission.findMany({
+        where: {
+          assessmentType: 'AKPD',
+          academicYear,
+          semester,
+          student: studentWhere
+        },
+        include: {
+          student: {
+            select: { id: true, name: true, nisn: true, currentClass: { select: { id: true, name: true } } }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      const totalClassSubmissions = submissions.length;
+
+      // Populate item analysis
+      items.forEach(it => {
+        itemAnalysis[it.id] = { count: 0, percentage: 0, studentNames: [], severity: it.severity };
+      });
+
+      submissions.forEach(sub => {
+        let rawSelectedIds: string[] = [];
+        try {
+          rawSelectedIds = JSON.parse(sub.rawAnswers || '[]');
+        } catch (e) {
+          rawSelectedIds = [];
+        }
+
+        rawSelectedIds.forEach(id => {
+          if (itemAnalysis[id]) {
+            itemAnalysis[id].count += 1;
+            if (sub.student?.name) {
+              itemAnalysis[id].studentNames.push(`${sub.student.name} (${sub.student.currentClass?.name || ''})`);
+            }
+          }
+        });
+
+        // Summary JSON parsing
+        try {
+          const sum = JSON.parse(sub.summaryJson || '{}');
+          if (sum.pribadi) fieldDistribution.Pribadi += sum.pribadi.count || 0;
+          if (sum.sosial) fieldDistribution.Sosial += sum.sosial.count || 0;
+          if (sum.belajar) fieldDistribution.Belajar += sum.belajar.count || 0;
+          if (sum.karier) fieldDistribution.Karier += sum.karier.count || 0;
+        } catch (e) {}
+      });
+
+      // Calculate percentage for each item
+      topNeedsInClass = items.map(it => {
+        const count = itemAnalysis[it.id]?.count || 0;
+        const pct = totalClassSubmissions > 0 ? Math.round((count / totalClassSubmissions) * 100) : 0;
+        itemAnalysis[it.id].percentage = pct;
+        return {
+          code: it.id,
+          text: it.text,
+          category: it.category,
+          count,
+          pct
+        };
+      }).sort((a, b) => b.count - a.count);
+
+      studentSubmissions = submissions;
+    }
+
     return NextResponse.json({
-      items: AKPD_ITEMS,
-      totalItems: AKPD_ITEMS.length,
-      existingResult
+      items,
+      totalItems: items.length,
+      existingResult,
+      existingSubmission,
+      itemAnalysis,
+      studentSubmissions,
+      fieldDistribution,
+      topNeedsInClass: topNeedsInClass.slice(0, 10)
     });
   } catch (error: any) {
-    console.error('Error fetching AKPD items:', error);
-    return NextResponse.json({ error: 'Gagal memuat butir AKPD' }, { status: 500 });
+    console.error('Error fetching AKPD:', error);
+    return NextResponse.json({ error: 'Gagal memuat AKPD' }, { status: 500 });
   }
 }
 
-// POST: Simpan hasil pengisian AKPD Online siswa
+// POST: Simpan Pengerjaan AKPD Siswa
 export async function POST(request: Request) {
   try {
     const session = await getSession();
@@ -94,21 +157,15 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { selectedItemIds = [], notes } = body;
+    const { selectedItemIds = [], academicYear = '2025/2026', semester = 'Ganjil' } = body;
 
     let targetStudentId = session.studentId;
     if (!targetStudentId) {
-      // Cari student berdasarkan nipNis atau username
       const student = await prisma.student.findFirst({
-        where: {
-          OR: [{ nis: session.username }, { nisn: session.username }]
-        }
+        where: { OR: [{ nis: session.username }, { nisn: session.username }] }
       });
-      if (student) {
-        targetStudentId = student.id;
-      } else {
-        return NextResponse.json({ error: 'Data peserta didik tidak ditemukan' }, { status: 404 });
-      }
+      if (student) targetStudentId = student.id;
+      else return NextResponse.json({ error: 'Data peserta didik tidak ditemukan' }, { status: 404 });
     }
 
     const studentRecord = await prisma.student.findUnique({
@@ -120,8 +177,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Profil siswa tidak valid' }, { status: 404 });
     }
 
-    // Hitung distribusi kebutuhan per 4 bidang
-    const selectedItems = AKPD_ITEMS.filter(item => selectedItemIds.includes(item.id));
+    // Load custom severities
+    const configs = await prisma.assessmentItemConfig.findMany({
+      where: { assessmentType: 'AKPD' }
+    });
+    const severityMap: Record<string, string> = {};
+    configs.forEach(c => { severityMap[c.itemCode] = c.severity; });
+
+    const items = DEFAULT_AKPD_ITEMS.map(it => ({
+      ...it,
+      severity: severityMap[it.id] || it.severity || 'NORMAL'
+    }));
+
+    const selectedItems = items.filter(i => selectedItemIds.includes(i.id));
+
+    // Distribution calculation
     const countPribadi = selectedItems.filter(i => i.category === 'Pribadi').length;
     const countSosial = selectedItems.filter(i => i.category === 'Sosial').length;
     const countBelajar = selectedItems.filter(i => i.category === 'Belajar').length;
@@ -133,7 +203,6 @@ export async function POST(request: Request) {
     const percentBelajar = Math.round((countBelajar / 10) * 100);
     const percentKarier = Math.round((countKarier / 10) * 100);
 
-    // Tentukan kategori dominan
     const scores = [
       { name: 'Belajar', val: countBelajar, pct: percentBelajar },
       { name: 'Pribadi', val: countPribadi, pct: percentPribadi },
@@ -142,47 +211,99 @@ export async function POST(request: Request) {
     ].sort((a, b) => b.val - a.val);
 
     const dominantField = scores[0];
-    const categoryStatus = totalSelected >= 15 ? 'Kebutuhan Tinggi' : totalSelected >= 7 ? 'Kebutuhan Sedang' : 'Kebutuhan Rendah (Stabil)';
+    const categoryStatus = totalSelected >= 15 ? 'Kebutuhan Tinggi' : totalSelected >= 7 ? 'Kebutuhan Sedang' : 'Kebutuhan Rendah';
 
-    const interpretation = `Hasil AKPD menunjukkan peserta didik memiliki ${totalSelected} butir kebutuhan prioritas (Tingkat: ${categoryStatus}). Kebutuhan tertinggi berada pada Bidang ${dominantField.name} (${dominantField.pct}%). Rincian distribusi 4 Bidang Layanan: Belajar (${percentBelajar}%), Pribadi (${percentPribadi}%), Sosial (${percentSosial}%), dan Karier (${percentKarier}%).`;
+    const interpretation = `Hasil AKPD menunjukkan peserta didik memiliki ${totalSelected} butir kebutuhan prioritas (${categoryStatus}). Kebutuhan tertinggi berada pada Bidang ${dominantField.name} (${dominantField.pct}%). Rincian 4 Bidang Layanan: Belajar (${percentBelajar}%), Pribadi (${percentPribadi}%), Sosial (${percentSosial}%), dan Karier (${percentKarier}%).`;
 
     const attentionAreasList = selectedItems.map((it, idx) => `${idx + 1}. [${it.category}] (${it.id}) ${it.text}`).join('\n');
 
     let recommendations = '';
     if (dominantField.name === 'Belajar') {
-      recommendations = 'Diberikan layanan Bimbingan Klasikal mengenai Manajemen Waktu & Strategi Gaya Belajar Efektif, serta konseling individual bagi siswa yang mengalami kesulitan konsentrasi atau prokrastinasi.';
+      recommendations = 'Diberikan layanan Bimbingan Klasikal mengenai Manajemen Waktu & Strategi Belajar Efektif serta konseling individual untuk prokrastinasi.';
     } else if (dominantField.name === 'Pribadi') {
-      recommendations = 'Diberikan layanan Bimbingan Kelompok tentang Regulasi Emosi, Meningkatkan Kepercayaan Diri, dan Pembinaan Karakter Positif.';
+      recommendations = 'Diberikan layanan Bimbingan Kelompok tentang Regulasi Emosi, Kepercayaan Diri, dan Pembinaan Karakter Positif.';
     } else if (dominantField.name === 'Sosial') {
-      recommendations = 'Diberikan bimbingan klasikal mengenai Etika Pertemanan Sehat, Keterampilan Komunikasi Asertif, dan Sosialisasi Pencegahan Perundungan (Anti-Bullying).';
+      recommendations = 'Diberikan bimbingan klasikal mengenai Etika Pertemanan Sehat, Komunikasi Asertif, dan Sosialisasi Pencegahan Perundungan (Anti-Bullying).';
     } else {
-      recommendations = 'Diberikan layanan Bimbingan Karier mengenai Eksplorasi Cita-cita dan Pengenalan Peminatan Sekolah Lanjutan (SMA vs SMK).';
+      recommendations = 'Diberikan layanan Bimbingan Karier mengenai Eksplorasi Cita-cita dan Peminatan Sekolah Lanjutan (SMA/SMK).';
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const summaryData = {
+      totalSelected,
+      pribadi: { count: countPribadi, percent: percentPribadi },
+      sosial: { count: countSosial, percent: percentSosial },
+      belajar: { count: countBelajar, percent: percentBelajar },
+      karier: { count: countKarier, percent: percentKarier },
+      dominantField: dominantField.name,
+      categoryStatus
+    };
 
-    // Simpan ke AssessmentResult
-    const assessmentResult = await prisma.assessmentResult.create({
+    // Determine version
+    const lastSub = await prisma.assessmentSubmission.findFirst({
+      where: { studentId: targetStudentId, assessmentType: 'AKPD', academicYear, semester },
+      orderBy: { version: 'desc' }
+    });
+
+    const newVersion = (lastSub?.version || 0) + 1;
+
+    // Save to AssessmentSubmission
+    const submission = await prisma.assessmentSubmission.create({
       data: {
         studentId: targetStudentId,
-        assessmentName: 'AKPD (Angket Kebutuhan Peserta Didik)',
+        assessmentType: 'AKPD',
+        academicYear,
+        semester,
+        version: newVersion,
+        score: totalSelected,
+        dominantResult: `Dominan ${dominantField.name} (${categoryStatus})`,
+        rawAnswers: JSON.stringify(selectedItemIds),
+        summaryJson: JSON.stringify(summaryData),
+        interpretation,
+        recommendations,
+        bkTeacherName: 'Guru BK SMPN 41 Jakarta'
+      }
+    });
+
+    // Also update / create AssessmentResult for legacy view
+    const todayStr = new Date().toISOString().split('T')[0];
+    await prisma.assessmentResult.create({
+      data: {
+        studentId: targetStudentId,
+        assessmentName: `AKPD (${academicYear} - Semester ${semester})`,
         date: todayStr,
-        academicYear: '2025/2026',
+        academicYear,
         score: totalSelected,
         category: `${categoryStatus} (Dominan: ${dominantField.name})`,
         interpretation,
         attentionAreas: attentionAreasList,
         recommendations,
-        bkTeacherName: 'Dra. Hj. Siti Aminah, M.Pd.'
+        bkTeacherName: 'Guru BK SMPN 41 Jakarta'
       }
     });
 
-    // Buat notifikasi untuk Guru BK
+    // Evaluate Assessment Alert System
+    const alertEval = evaluateAssessmentAlert(studentRecord.name, studentRecord.currentClass?.name || '7A', selectedItems as any, severityMap);
+
+    if (alertEval.hasAlert) {
+      await prisma.assessmentAlert.create({
+        data: {
+          studentId: targetStudentId,
+          submissionId: submission.id,
+          assessmentType: 'AKPD',
+          title: alertEval.title,
+          description: alertEval.description,
+          severity: alertEval.severity,
+          status: 'new'
+        }
+      });
+    }
+
+    // Create Notification
     await prisma.notification.create({
       data: {
         userId: targetStudentId,
         title: 'Asesmen AKPD Selesai Diisi',
-        message: `${studentRecord.name} (Kelas ${studentRecord.currentClass?.name}) telah menyelesaikan AKPD Online dengan ${totalSelected} butir kebutuhan (Dominan: ${dominantField.name}).`,
+        message: `${studentRecord.name} (Kelas ${studentRecord.currentClass?.name}) telah menyelesaikan AKPD Online (Dominan: ${dominantField.name}).`,
         type: 'ASSESSMENT',
         link: `/siswa/${targetStudentId}`
       }
@@ -190,17 +311,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Asesmen AKPD berhasil disimpan!',
-      result: assessmentResult,
-      summary: {
-        totalSelected,
-        pribadi: { count: countPribadi, percent: percentPribadi },
-        sosial: { count: countSosial, percent: percentSosial },
-        belajar: { count: countBelajar, percent: percentBelajar },
-        karier: { count: countKarier, percent: percentKarier },
-        dominantField: dominantField.name,
-        categoryStatus
-      }
+      submission,
+      summary: summaryData,
+      alert: alertEval.hasAlert ? alertEval : null
     });
   } catch (error: any) {
     console.error('Error submitting AKPD:', error);

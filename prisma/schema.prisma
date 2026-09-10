@@ -73,6 +73,8 @@ model Student {
 
   classHistories  StudentClassHistory[]
   assessmentResults AssessmentResult[]
+  assessmentSubmissions AssessmentSubmission[]
+  assessmentAlerts AssessmentAlert[]
   registrations   CounselingRegistration[]
   sessions        CounselingSession[]
   followUps       CounselingFollowUp[]
@@ -95,6 +97,74 @@ model Assessment {
   title          String
   category       String   // "AKPD/Kebutuhan", "Minat & Bakat", "Gaya Belajar", "Sosio-Emosional", "Karier", "Belajar"
   description    String?  @db.Text
+  createdAt      DateTime @default(now())
+}
+
+model AssessmentItemConfig {
+  id             String   @id @default(uuid())
+  assessmentType String   // "AKPD", "RIASEC", "MINAT_BAKAT", "SOSIOMETRI", "GAYA_BELAJAR"
+  itemCode       String   // e.g. "P01", "S02", "R01"
+  statement      String   @db.Text
+  category       String   // "Pribadi", "Sosial", "Belajar", "Karier", etc.
+  severity       String   @default("NORMAL") // "NORMAL", "ATTENTION", "CRITICAL"
+  orderIndex     Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([assessmentType, itemCode])
+}
+
+model AssessmentSubmission {
+  id             String   @id @default(uuid())
+  studentId      String
+  student        Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assessmentType String   // "AKPD", "RIASEC", "MINAT_BAKAT", "SOSIOMETRI", "GAYA_BELAJAR"
+  academicYear   String   @default("2025/2026")
+  semester       String   @default("Ganjil")
+  version        Int      @default(1)
+  score          Float?
+  dominantResult String?  // e.g. "SEC", "Visual", "Kebutuhan Belajar"
+  rawAnswers     String?  @db.Text // JSON string list ID item terpilih atau skor per item
+  summaryJson    String?  @db.Text // JSON detail skor per bidang/dimensi
+  interpretation String?  @db.Text
+  recommendations String? @db.Text
+  bkTeacherName  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  alerts         AssessmentAlert[]
+  sociometricChoices SociometricChoice[]
+}
+
+model AssessmentAlert {
+  id             String   @id @default(uuid())
+  studentId      String
+  student        Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  submissionId   String?
+  submission     AssessmentSubmission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  assessmentType String   // "AKPD", "RIASEC", "MINAT_BAKAT", "SOSIOMETRI", "GAYA_BELAJAR"
+  title          String
+  description    String   @db.Text
+  severity       String   // "high", "medium", "monitoring"
+  status         String   @default("new") // "new", "viewed", "follow_up", "resolved"
+  notes          String?  @db.Text
+  resolvedAt     DateTime?
+  resolvedBy     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model SociometricChoice {
+  id             String   @id @default(uuid())
+  submissionId   String
+  submission     AssessmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  academicYear   String   @default("2025/2026")
+  semester       String   @default("Ganjil")
+  classId        String
+  fromStudentId  String
+  toStudentId    String
+  criterion      String   @default("Belajar Kelompok") // e.g. "Belajar Kelompok", "Teman Curhat"
+  choiceOrder    Int      @default(1) // 1, 2, 3
   createdAt      DateTime @default(now())
 }
 

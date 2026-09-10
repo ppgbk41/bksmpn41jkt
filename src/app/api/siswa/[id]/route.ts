@@ -22,6 +22,8 @@ export async function GET(
         currentClass: true,
         classHistories: { orderBy: { academicYear: 'desc' } },
         assessmentResults: { orderBy: { date: 'desc' } },
+        assessmentSubmissions: { orderBy: [{ academicYear: 'desc' }, { semester: 'desc' }, { version: 'desc' }] },
+        assessmentAlerts: { orderBy: { createdAt: 'desc' } },
         registrations: { orderBy: { createdAt: 'desc' } },
         sessions: { orderBy: { date: 'desc' } },
         followUps: { orderBy: { createdAt: 'desc' } },
