@@ -345,3 +345,60 @@ model ActivityLog {
   ipAddress String?  @default("127.0.0.1")
   createdAt DateTime @default(now())
 }
+
+model BkWorkPost {
+  id            String    @id @default(uuid())
+  userId        String
+  studentId     String?
+  studentName   String
+  studentClass  String
+  userRole      String    @default("MURID")
+  avatarUrl     String?   @db.Text
+  imageUrl      String    @db.Text
+  caption       String    @db.Text
+  category      String    @default("Karya") // "LKPD", "Karya", "Refleksi", "Aktivitas BK", "Lainnya"
+  status        String    @default("published") // "published", "pending", "hidden"
+  likesCount    Int       @default(0)
+  commentsCount Int       @default(0)
+  reportsCount  Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  likes         BkWorkLike[]
+  comments      BkWorkComment[]
+  reports       BkWorkReport[]
+}
+
+model BkWorkLike {
+  id        String     @id @default(uuid())
+  postId    String
+  post      BkWorkPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime   @default(now())
+
+  @@unique([postId, userId])
+}
+
+model BkWorkComment {
+  id           String     @id @default(uuid())
+  postId       String
+  post         BkWorkPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId       String
+  userName     String
+  userClass    String?
+  userAvatar   String?    @db.Text
+  content      String     @db.Text
+  createdAt    DateTime   @default(now())
+}
+
+model BkWorkReport {
+  id           String     @id @default(uuid())
+  postId       String
+  post         BkWorkPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reporterId   String
+  reporterName String
+  reason       String     @db.Text
+  status       String     @default("PENDING") // PENDING, REVIEWED, DISMISSED
+  createdAt    DateTime   @default(now())
+}
+

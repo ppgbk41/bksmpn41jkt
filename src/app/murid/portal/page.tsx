@@ -126,6 +126,14 @@ export default function MuridPortalPage() {
 
           {/* Quick Action Buttons */}
           <div className="relative z-10 flex flex-wrap items-center gap-2">
+            <Link
+              href="/karya-bk"
+              className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-purple-600/30 hover:scale-105 transition-all"
+            >
+              <Sparkles className="w-4 h-4 text-yellow-300" />
+              <span>🎨 Karya BK Siswa</span>
+            </Link>
+
             <button
               onClick={() => setShowSosModal(true)}
               className="px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-red-600/40 animate-pulse hover:scale-105 transition-all"
