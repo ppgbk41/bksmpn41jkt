@@ -269,6 +269,7 @@ model CounselingFollowUp {
   nextRecommendations String? @db.Text
   status             String   @default("Dalam Proses") // "Dalam Proses", "Selesai"
   completedDate      String?
+  documentationUrl   String?  @db.Text
   createdAt          DateTime @default(now())
 }
 

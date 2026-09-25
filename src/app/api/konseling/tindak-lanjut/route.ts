@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { studentId, sessionId, type, scheduleDate, involvedParties, monitoringResult, conditionChange, nextRecommendations } = body;
+    const { studentId, sessionId, type, scheduleDate, involvedParties, monitoringResult, conditionChange, nextRecommendations, documentationUrl } = body;
 
     const followUp = await prisma.counselingFollowUp.create({
       data: {
@@ -44,6 +44,7 @@ export async function POST(request: Request) {
         monitoringResult: monitoringResult || '',
         conditionChange: conditionChange || '',
         nextRecommendations: nextRecommendations || '',
+        documentationUrl: documentationUrl || null,
         status: 'Dalam Proses'
       }
     });
