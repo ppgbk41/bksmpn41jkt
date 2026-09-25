@@ -77,6 +77,7 @@ sudo tee /etc/nginx/sites-available/bksmp41 > /dev/null <<EOF
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
+    server_name bk.smpn41jakarta.sch.id www.bk.smpn41jakarta.sch.id _;
 
     client_max_body_size 10M;
 
